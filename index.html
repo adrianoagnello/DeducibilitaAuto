@@ -15,11 +15,15 @@ h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
 .uso-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
 .uso-tab { padding: 7px 14px; font-size: 12px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; background: #fff; color: #555; transition: all .15s; }
 .uso-tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 12px; margin-bottom: 16px; }
-.field { display: flex; flex-direction: column; gap: 4px; }
-.field label { font-size: 12px; color: #666; line-height: 1.4; }
-.field input, .field select { border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 13px; width: 100%; outline: none; background: #fff; }
+.grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 16px; }
+.field { display: flex; flex-direction: column; }
+.field label { font-size: 12px; color: #666; line-height: 1.4; min-height: 34px; display: flex; align-items: flex-end; padding-bottom: 4px; }
+.field input, .field select { border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 13px; width: 100%; outline: none; background: #fff; height: 36px; }
 .field input:focus, .field select:focus { border-color: #555; }
+.field .hint { margin-top: 4px; }
+.col2 { grid-column: span 2; }
+@media (max-width: 860px) { .grid { grid-template-columns: repeat(3, 1fr); } .col2 { grid-column: span 1; } }
+@media (max-width: 540px) { .grid { grid-template-columns: repeat(2, 1fr); } }
 .hint { font-size: 11px; color: #bbb; margin-top: 2px; display: block; }
 .hint.warn { color: #b45309; font-weight: 500; }
 .info-box { border-radius: 8px; padding: 12px 16px; font-size: 12px; line-height: 1.65; margin-bottom: 16px; }
@@ -90,26 +94,24 @@ h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
       <span class="hint" id="hintLeas"></span>
     </div>
     <div class="field">
-      <label>Spese utilizzo annue (€ IVA esclusa)<br><span class="hint">carburante, assicurazione, manutenzione</span></label>
+      <label>Spese utilizzo annue (€ IVA esclusa)</label>
       <input type="number" id="vSpese" value="4000" step="100">
+      <span class="hint">carburante, assicurazione, manutenzione</span>
     </div>
     <div class="field">
       <label>Anni di utilizzo (per confronto)</label>
       <input type="number" id="vAnni" value="4" min="1" max="10">
+      <span class="hint">&nbsp;</span>
     </div>
-    <div class="field">
+    <div class="field col2">
       <label>Tipo di alimentazione</label>
       <select id="alimentazione">
-        <option value="termico">Termico (benzina/diesel/GPL/metano)</option>
-        <option value="ibrido_nplug">Ibrido non plug-in (HEV/MHEV)</option>
+        <option value="termico">Termico (benzina / diesel / GPL / metano)</option>
+        <option value="ibrido_nplug">Ibrido non plug-in (HEV / MHEV)</option>
         <option value="ibrido_plug">Ibrido plug-in (PHEV)</option>
         <option value="elettrico">Elettrico puro (BEV)</option>
       </select>
       <span class="hint" id="hintAlim"></span>
-    </div>
-    <div class="field">
-      <label>Emissioni CO₂ (g/km)<br><span class="hint">solo per deducibilità leasing uso aziendale</span></label>
-      <input type="number" id="vCo2" value="0" min="0" max="300" step="5">
     </div>
   </div>
 
@@ -185,12 +187,7 @@ function fmt(n)  { return Math.round(n).toLocaleString('it-IT'); }
 function fmt2(n) { return n.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function pct(n)  { return (Math.round(n * 10) / 10).toLocaleString('it-IT') + '%'; }
 
-function leasCo2Info(co2, usePct, pctVal) {
-  if (usePct) return { val: pctVal, label: pct(pctVal * 100) };
-  if (co2 === 0) return { val: 0.70, label: '70% (elettrico/plug-in)' };
-  if (co2 <= 60) return { val: 0.40, label: '40% (CO₂ ≤ 60 g/km)' };
-  return              { val: 0.20, label: '20% (CO₂ > 60 g/km)' };
-}
+
 
 function calcola() {
   const vAcq   = parseFloat(document.getElementById('vAcq').value)   || 0;
@@ -198,7 +195,6 @@ function calcola() {
   const vLeas  = parseFloat(document.getElementById('vLeas').value)   || 0;
   const vSpese = parseFloat(document.getElementById('vSpese').value)  || 0;
   const anni   = parseInt(document.getElementById('vAnni').value)     || 4;
-  const co2    = parseInt(document.getElementById('vCo2').value)      || 0;
   const alim   = document.getElementById('alimentazione').value;
 
   const sc       = SCENARI[uso];
@@ -206,7 +202,6 @@ function calcola() {
   const ivaDet   = sc.ivaDet;
   const ivaIndet = 1 - ivaDet;
   const limiti   = sc.limiti;
-  const useCo2   = (uso === 'strum' || uso === 'gen');
 
   const fbInfo   = FB_ALIQUOTE[alim];
 
@@ -249,13 +244,14 @@ function calcola() {
   // ── LEASING ───────────────────────────────────────────────────────────────
   const canoneFiscLeasM = vLeas + ivaLeasIndetM;
   const canoneFiscLeasA = canoneFiscLeasM * 12;
-  const co2info = leasCo2Info(co2, !useCo2, dPct);
+  const leasDedPct = dPct;
+  const leasDedLabel = pct(leasDedPct * 100);
   let leasRacc = 1;
   if (limiti && costoFiscAcq > 0) {
     leasRacc = Math.min(costoFiscAcq, LIMITE_ACQ) / costoFiscAcq;
   }
   const canoneRilLeasA = canoneFiscLeasA * leasRacc;
-  const dLeasA         = canoneRilLeasA * co2info.val;
+  const dLeasA         = canoneRilLeasA * leasDedPct;
   const cappedLeas     = limiti && costoFiscAcq > LIMITE_ACQ;
 
   // ── SPESE UTILIZZO ────────────────────────────────────────────────────────
@@ -401,12 +397,12 @@ Per la società è <b>interamente deducibile</b> come costo del personale; il ${
         limiti
           ? ['Rapporto limite/costo',       pct(leasRacc*100)+' → ridotto a '+fmt2(canoneRilLeasA)+' €'+(cappedLeas?' ⚠':''), cappedLeas]
           : ['Canone annuo rilevante',      fmt2(canoneRilLeasA)+' €'],
-        ['Deducibilità canoni (CO₂)',       co2info.label],
+        ['Deducibilità canoni',       leasDedLabel],
         ['Quota ded. canoni/anno',          fmt2(dLeasA)+' €'],
         ['IVA detraibile/anno',             fmt2(ivaLeasDetA)+' €'],
         ['Spese utilizzo ded./anno',        fmt2(dSpA)+' €'],
       ],
-      capNote: cappedLeas ? `Costo fiscale (${fmt2(costoFiscAcq)} €) eccede ${fmt2(LIMITE_ACQ)} €: il canone è ridotto al ${pct(leasRacc*100)} prima di applicare la % CO₂.` : null,
+      capNote: cappedLeas ? `Costo fiscale (${fmt2(costoFiscAcq)} €) eccede ${fmt2(LIMITE_ACQ)} €: il canone è ridotto al ${pct(leasRacc*100)} prima di applicare la % di deducibilità.` : null,
       tot: dLeasA+dSpA, netto: cLeas, best: cLeas===best
     }
   ];
@@ -430,7 +426,7 @@ Per la società è <b>interamente deducibile</b> come costo del personale; il ${
   </div>`).join('');
 }
 
-['vAcq','vNol','vLeas','vSpese','vAnni','vCo2'].forEach(id =>
+['vAcq','vNol','vLeas','vSpese','vAnni'].forEach(id =>
   document.getElementById(id).addEventListener('input', calcola)
 );
 document.getElementById('alimentazione').addEventListener('change', calcola);
@@ -438,4 +434,6 @@ calcola();
 </script>
 </body>
 </html>
+
+
 
