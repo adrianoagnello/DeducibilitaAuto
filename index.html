@@ -18,8 +18,8 @@ h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 12px; margin-bottom: 16px; }
 .field { display: flex; flex-direction: column; gap: 4px; }
 .field label { font-size: 12px; color: #666; line-height: 1.4; }
-.field input { border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 13px; width: 100%; outline: none; }
-.field input:focus { border-color: #555; }
+.field input, .field select { border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 13px; width: 100%; outline: none; background: #fff; }
+.field input:focus, .field select:focus { border-color: #555; }
 .hint { font-size: 11px; color: #bbb; margin-top: 2px; display: block; }
 .hint.warn { color: #b45309; font-weight: 500; }
 .info-box { border-radius: 8px; padding: 12px 16px; font-size: 12px; line-height: 1.65; margin-bottom: 16px; }
@@ -45,10 +45,13 @@ h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
 .cr .l { color: #888; }
 .cr .v { font-weight: 500; text-align: right; }
 .cr .v.cap { color: #ef4444; }
-.cr .v.sub { color: #888; font-weight: 400; font-style: italic; }
 .ctot { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; padding-top: 8px; margin-top: 6px; border-top: 1px solid #e0e0e0; }
 .cnote { font-size: 10px; color: #aaa; margin-top: 6px; line-height: 1.4; }
 .capnote { font-size: 10px; color: #b45309; margin-top: 5px; line-height: 1.4; }
+.alim-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+.alim-table th { text-align: left; color: #888; font-weight: 500; padding: 3px 6px; border-bottom: 1px solid #e5e5e5; }
+.alim-table td { padding: 3px 6px; border-bottom: 1px solid #f0f0f0; color: #555; }
+.alim-table tr.active-row td { font-weight: 600; color: #1a1a1a; background: #fffbea; }
 .avv { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px 16px; font-size: 11px; color: #888; margin-top: 16px; line-height: 1.6; }
 @media (max-width: 640px) { .cards3 { grid-template-columns: 1fr; } .uso-tabs { flex-direction: column; } }
 </style>
@@ -57,7 +60,7 @@ h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
 <div class="container">
   <h1>Deducibilità auto aziendale</h1>
   <p class="subtitle">Confronto acquisto · noleggio (NLT) · leasing — IRES, IVA, limiti art. 164 TUIR, fringe benefit<br>
-  <span style="font-size:11px;color:#b45309">I parametri di input sono IVA esclusa. L'IVA indetraibile viene capitalizzata sul costo fiscalmente rilevante (art. 164 TUIR).</span></p>
+  <span style="font-size:11px;color:#b45309">I valori di input sono IVA esclusa. L'IVA indetraibile viene capitalizzata sul costo fiscalmente rilevante.</span></p>
 
   <p class="sec">Scenario di utilizzo</p>
   <div class="uso-tabs">
@@ -95,8 +98,18 @@ h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
       <input type="number" id="vAnni" value="4" min="1" max="10">
     </div>
     <div class="field">
-      <label>Emissioni CO₂ (g/km)<br><span class="hint">0 = elettrico / ibrido plug-in</span></label>
-      <input type="number" id="vCo2" value="100" min="0" max="300" step="5">
+      <label>Tipo di alimentazione</label>
+      <select id="alimentazione">
+        <option value="termico">Termico (benzina/diesel/GPL/metano)</option>
+        <option value="ibrido_nplug">Ibrido non plug-in (HEV/MHEV)</option>
+        <option value="ibrido_plug">Ibrido plug-in (PHEV)</option>
+        <option value="elettrico">Elettrico puro (BEV)</option>
+      </select>
+      <span class="hint" id="hintAlim"></span>
+    </div>
+    <div class="field">
+      <label>Emissioni CO₂ (g/km)<br><span class="hint">solo per deducibilità leasing uso aziendale</span></label>
+      <input type="number" id="vCo2" value="0" min="0" max="300" step="5">
     </div>
   </div>
 
@@ -118,7 +131,7 @@ h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
   <div class="iva-grid" id="ristG"></div>
 
   <div class="avv">
-    <b>Avvertenza</b> — Strumento a finalità orientativa. L'IVA indetraibile viene aggiunta al costo fiscalmente rilevante prima del confronto con i limiti art. 164 TUIR (acquisto max <b>18.075,99 €</b>; noleggio max <b>3.615,20 €/anno</b>; per il leasing la quota indeducibile è scorporata proporzionalmente sul canone). I limiti si applicano agli scenari "uso generico" e "strumentale". Per dipendenti e amministratori la percentuale opera sul costo pieno senza limiti di importo. Le aliquote CO₂ per leasing si applicano ai contratti dal 1° gennaio 2025. Fringe benefit calcolato in forma semplificata — verificare tabelle ACI aggiornate. Consultare sempre il proprio consulente fiscale.
+    <b>Avvertenza</b> — Strumento a finalità orientativa. L'IVA indetraibile viene aggiunta al costo fiscalmente rilevante prima del confronto con i limiti art. 164 TUIR (acquisto max <b>18.075,99 €</b>; noleggio max <b>3.615,20 €/anno</b>). I limiti si applicano agli scenari "uso generico", "uso strumentale" e "amministratore". Per il dipendente la percentuale (70%) opera sul costo pieno senza limiti. Per il leasing la quota indeducibile è scorporata proporzionalmente sul canone. Il fringe benefit è calcolato con le aliquote 2025 per tipo di alimentazione (DL Riforma IRPEF/IRES) — verificare la normativa aggiornata. Consultare sempre il proprio consulente fiscale.
   </div>
 </div>
 
@@ -129,26 +142,34 @@ const LIMITE_ACQ      = 18075.99;
 const LIMITE_NOL_ANNO = 3615.20;
 const IVA             = 0.22;
 
+// Fringe benefit 2025 — aliquote per tipo di alimentazione
+const FB_ALIQUOTE = {
+  elettrico:    { pct: 0.10, label: '10% — Elettrico puro (BEV)' },
+  ibrido_plug:  { pct: 0.20, label: '20% — Ibrido plug-in (PHEV)' },
+  ibrido_nplug: { pct: 0.30, label: '30% — Ibrido non plug-in (HEV/MHEV)' },
+  termico:      { pct: 0.50, label: '50% — Termico (benzina/diesel/GPL/metano)' }
+};
+
 const SCENARI = {
   strum: {
     label: 'Uso esclusivamente strumentale',
-    descr: 'Veicoli adibiti <b>esclusivamente</b> all\'attività d\'impresa (autonoleggio, taxi, scuola guida, agenti di commercio). Deducibilità <b>100%</b>, IVA detraibile <b>100%</b> — nessuna quota indetraibile da capitalizzare. I limiti di costo art. 164 non si applicano.',
+    descr: 'Veicoli adibiti <b>esclusivamente</b> all\'attività d\'impresa (autonoleggio, taxi, scuola guida, agenti). Deducibilità <b>100%</b>, IVA detraibile <b>100%</b> — nessuna quota indetraibile da capitalizzare. I limiti art. 164 non si applicano.',
     dPct: 1.00, ivaDet: 1.00, limiti: false, fringe: false
   },
   gen: {
     label: 'Non assegnata — uso generico aziendale',
-    descr: 'Caso più comune: auto non assegnata stabilmente ad alcun soggetto. Deducibilità <b>20%</b>, IVA detraibile <b>40%</b>. Il <b>60% di IVA indetraibile</b> si capitalizza sul costo, che viene poi confrontato con i limiti art. 164 TUIR.',
+    descr: 'Auto non assegnata stabilmente ad alcun soggetto. Deducibilità <b>20%</b>, IVA detraibile <b>40%</b>. Il <b>60% di IVA indetraibile</b> si capitalizza sul costo, confrontato con i limiti art. 164 TUIR.',
     dPct: 0.20, ivaDet: 0.40, limiti: true, fringe: false
   },
   dip: {
     label: 'Assegnata al dipendente (uso promiscuo)',
-    descr: 'Auto concessa in uso promiscuo al dipendente. Deducibilità <b>70%</b> sul costo pieno (nessun limite di importo). IVA detraibile <b>40%</b>: il 60% indetraibile si capitalizza sul costo base ma senza tetto. Il dipendente tassa il fringe benefit come reddito da lavoro.',
+    descr: 'Auto concessa in uso promiscuo al dipendente. Deducibilità <b>70%</b> sul costo pieno — <b>nessun limite di importo</b>. IVA detraibile <b>40%</b>. Il dipendente tassa il fringe benefit (aliquota per alimentazione) come reddito da lavoro dipendente.',
     dPct: 0.70, ivaDet: 0.40, limiti: false, fringe: true
   },
   amm: {
     label: 'Assegnata all\'amministratore (uso promiscuo)',
-    descr: 'Auto concessa in uso promiscuo all\'amministratore. Deducibilità <b>20%</b> sul costo pieno (nessun limite di importo). IVA detraibile <b>40%</b>: il 60% indetraibile si capitalizza. L\'amministratore tassa il fringe benefit come reddito assimilato.',
-    dPct: 0.20, ivaDet: 0.40, limiti: false, fringe: true
+    descr: 'Auto concessa in uso promiscuo all\'amministratore. Deducibilità <b>20%</b>, IVA detraibile <b>40%</b>. Si applicano i <b>limiti art. 164 TUIR</b> (acquisto max 18.075,99 €; noleggio max 3.615,20 €/anno). L\'amministratore tassa il fringe benefit come reddito assimilato.',
+    dPct: 0.20, ivaDet: 0.40, limiti: true, fringe: true
   }
 };
 
@@ -172,56 +193,60 @@ function leasCo2Info(co2, usePct, pctVal) {
 }
 
 function calcola() {
-  const vAcq   = parseFloat(document.getElementById('vAcq').value)  || 0;
-  const vNol   = parseFloat(document.getElementById('vNol').value)   || 0;
-  const vLeas  = parseFloat(document.getElementById('vLeas').value)  || 0;
-  const vSpese = parseFloat(document.getElementById('vSpese').value) || 0;
-  const anni   = parseInt(document.getElementById('vAnni').value)    || 4;
-  const co2    = parseInt(document.getElementById('vCo2').value)     || 0;
+  const vAcq   = parseFloat(document.getElementById('vAcq').value)   || 0;
+  const vNol   = parseFloat(document.getElementById('vNol').value)    || 0;
+  const vLeas  = parseFloat(document.getElementById('vLeas').value)   || 0;
+  const vSpese = parseFloat(document.getElementById('vSpese').value)  || 0;
+  const anni   = parseInt(document.getElementById('vAnni').value)     || 4;
+  const co2    = parseInt(document.getElementById('vCo2').value)      || 0;
+  const alim   = document.getElementById('alimentazione').value;
 
-  const sc     = SCENARI[uso];
-  const dPct   = sc.dPct;
-  const ivaDet = sc.ivaDet;       // quota IVA detraibile (es. 0.40)
-  const ivaIndet = 1 - ivaDet;    // quota IVA indetraibile da capitalizzare (es. 0.60)
-  const limiti = sc.limiti;
-  const useCo2 = (uso === 'strum' || uso === 'gen');
+  const sc       = SCENARI[uso];
+  const dPct     = sc.dPct;
+  const ivaDet   = sc.ivaDet;
+  const ivaIndet = 1 - ivaDet;
+  const limiti   = sc.limiti;
+  const useCo2   = (uso === 'strum' || uso === 'gen');
+
+  const fbInfo   = FB_ALIQUOTE[alim];
+
+  // Hint alimentazione
+  document.getElementById('hintAlim').textContent =
+    sc.fringe ? `Fringe benefit: ${fbInfo.label}` : '';
 
   document.getElementById('scenarioBox').innerHTML = `<b>${sc.label}</b><br>${sc.descr}`;
 
   // ── IVA ───────────────────────────────────────────────────────────────────
-  // Importi IVA totale
-  const ivaAcqTot   = vAcq    * IVA;
-  const ivaNolMens  = vNol    * IVA;
-  const ivaLeasMens = vLeas   * IVA;
-  const ivaSpeseAnn = vSpese  * IVA;
+  const ivaAcqTot   = vAcq   * IVA;
+  const ivaNolMens  = vNol   * IVA;
+  const ivaLeasMens = vLeas  * IVA;
+  const ivaSpeseAnn = vSpese * IVA;
 
-  // IVA detraibile (recuperata)
-  const ivaAcqDet   = ivaAcqTot   * ivaDet;
-  const ivaNolDetA  = (ivaNolMens  * 12) * ivaDet;
-  const ivaLeasDetA = (ivaLeasMens * 12) * ivaDet;
-  const ivaSpDetA   = ivaSpeseAnn  * ivaDet;
+  const ivaAcqDet   = ivaAcqTot        * ivaDet;
+  const ivaNolDetA  = (ivaNolMens * 12) * ivaDet;
+  const ivaLeasDetA = (ivaLeasMens* 12) * ivaDet;
+  const ivaSpDetA   = ivaSpeseAnn       * ivaDet;
 
-  // IVA indetraibile (costo aggiuntivo da capitalizzare)
-  const ivaAcqIndet   = ivaAcqTot   * ivaIndet;             // una tantum sull'acquisto
-  const ivaNolIndetM  = ivaNolMens  * ivaIndet;             // mensile NLT
-  const ivaLeasIndetM = ivaLeasMens * ivaIndet;             // mensile leasing
-  const ivaSpIndetA   = ivaSpeseAnn  * ivaIndet;            // annuale spese
+  const ivaAcqIndet   = ivaAcqTot        * ivaIndet;
+  const ivaNolIndetM  = ivaNolMens        * ivaIndet;
+  const ivaLeasIndetM = ivaLeasMens       * ivaIndet;
+  const ivaSpIndetA   = ivaSpeseAnn       * ivaIndet;
 
-  // ── ACQUISTO — costo fiscalmente rilevante (IVA esclusa + IVA indetraibile) ──
-  const costoFiscAcq  = vAcq + ivaAcqIndet;                 // base per confronto limite
-  const costoRilAcq   = limiti ? Math.min(costoFiscAcq, LIMITE_ACQ) : costoFiscAcq;
-  const ammAnnuo      = costoRilAcq / 4;
-  const dAcqA         = ammAnnuo * dPct;
-  const cappedAcq     = limiti && costoFiscAcq > LIMITE_ACQ;
+  // ── ACQUISTO ──────────────────────────────────────────────────────────────
+  const costoFiscAcq = vAcq + ivaAcqIndet;
+  const costoRilAcq  = limiti ? Math.min(costoFiscAcq, LIMITE_ACQ) : costoFiscAcq;
+  const ammAnnuo     = costoRilAcq / 4;
+  const dAcqA        = ammAnnuo * dPct;
+  const cappedAcq    = limiti && costoFiscAcq > LIMITE_ACQ;
 
-  // ── NOLEGGIO — canone rilevante mensile (IVA esclusa + IVA indetraibile) ──
-  const canoneFiscNolM = vNol + ivaNolIndetM;               // canone mensile lordo IVA indet.
-  const canoneFiscNolA = canoneFiscNolM * 12;               // annualizzato
+  // ── NOLEGGIO ──────────────────────────────────────────────────────────────
+  const canoneFiscNolM = vNol + ivaNolIndetM;
+  const canoneFiscNolA = canoneFiscNolM * 12;
   const canoneRilNolA  = limiti ? Math.min(canoneFiscNolA, LIMITE_NOL_ANNO) : canoneFiscNolA;
   const dNolA          = canoneRilNolA * dPct;
   const cappedNol      = limiti && canoneFiscNolA > LIMITE_NOL_ANNO;
 
-  // ── LEASING — canone rilevante (con rapporto limite/costo se necessario) ──
+  // ── LEASING ───────────────────────────────────────────────────────────────
   const canoneFiscLeasM = vLeas + ivaLeasIndetM;
   const canoneFiscLeasA = canoneFiscLeasM * 12;
   const co2info = leasCo2Info(co2, !useCo2, dPct);
@@ -233,30 +258,33 @@ function calcola() {
   const dLeasA         = canoneRilLeasA * co2info.val;
   const cappedLeas     = limiti && costoFiscAcq > LIMITE_ACQ;
 
-  // ── SPESE UTILIZZO (IVA indetraibile capitalizzata sul costo) ─────────────
+  // ── SPESE UTILIZZO ────────────────────────────────────────────────────────
   const speseConIvaIndet = vSpese + ivaSpIndetA;
   const dSpA             = speseConIvaIndet * dPct;
 
   // ── FRINGE BENEFIT ────────────────────────────────────────────────────────
   const fbBox = document.getElementById('fbBox');
   if (sc.fringe) {
-    const tCo2 = co2 === 0 || co2 <= 60 ? 0.10
-               : co2 <= 160             ? 0.20
-               : co2 <= 190             ? 0.30
-               :                          0.50;
-    const fringe = costoFiscAcq * tCo2 * 0.30;  // fringe su costo comprensivo di IVA indet.
+    const fringe = costoFiscAcq * fbInfo.pct * 0.30;
     const sogg   = uso === 'dip' ? 'dipendente' : 'amministratore';
     fbBox.style.display = 'block';
-    fbBox.innerHTML = `<b>Fringe benefit — uso promiscuo al ${sogg}</b><br>
-Il 30% del costo chilometrico ACI su 15.000 km/anno è fringe benefit tassabile in capo al ${sogg}
-(fascia CO₂: ${pct(tCo2 * 100)}). Base di calcolo: costo fiscale ${fmt2(costoFiscAcq)} € (incl. IVA indetraibile).
-Stima: <b>≈ ${fmt(fringe)} €/anno</b>. Per la società è <b>interamente deducibile</b> come costo del personale.<br>
-<span style="font-size:11px">Verificare le tabelle ACI aggiornate — le fasce CO₂ sono state riformate dal 2025.</span>`;
+    fbBox.innerHTML = `<b>Fringe benefit — uso promiscuo al ${sogg} (regole 2025)</b><br>
+Il fringe benefit è pari al <b>30% del costo chilometrico ACI</b> calcolato su 15.000 km/anno,
+applicando l'aliquota per tipo di alimentazione: <b>${fbInfo.label}</b>.<br>
+Base di calcolo: costo fiscale ${fmt2(costoFiscAcq)} € (incl. IVA indetraibile).
+Fringe benefit stimato: <b>≈ ${fmt(fringe)} €/anno</b>.<br>
+Per la società è <b>interamente deducibile</b> come costo del personale; il ${sogg} lo tassa a IRPEF ordinaria.<br>
+<table class="alim-table" style="margin-top:8px">
+  <tr><th>Alimentazione</th><th>Aliquota FB 2025</th></tr>
+  ${Object.entries(FB_ALIQUOTE).map(([k,v])=>`
+  <tr class="${k===alim?'active-row':''}"><td>${v.label.split(' — ')[1]}</td><td>${pct(v.pct*100)}</td></tr>`).join('')}
+</table>
+<span style="font-size:10px;margin-top:6px;display:block">La stima è semplificata — il calcolo esatto usa le tabelle ACI aggiornate annualmente.</span>`;
   } else {
     fbBox.style.display = 'none';
   }
 
-  // ── HINT sotto i campi ────────────────────────────────────────────────────
+  // ── HINT LIMITI ───────────────────────────────────────────────────────────
   const hA = document.getElementById('hintAcq');
   const hN = document.getElementById('hintNol');
   const hL = document.getElementById('hintLeas');
@@ -318,16 +346,15 @@ Stima: <b>≈ ${fmt(fringe)} €/anno</b>. Per la società è <b>interamente ded
   });
 
   // ── COSTO NETTO PLURIENNALE ───────────────────────────────────────────────
-  // Esborso reale = costo IVA inclusa totale, meno IVA detraibile, meno risparmio fiscale IRES
   const ir     = 0.24;
-  const esAcq  = vAcq + ivaAcqTot;                              // esborso acquisto IVA inclusa
-  const esNol  = (vNol + ivaNolMens) * 12 * anni;               // esborso NLT IVA inclusa
-  const esLeas = (vLeas + ivaLeasMens) * 12 * anni;             // esborso leasing IVA inclusa
-  const esSp   = (vSpese + ivaSpeseAnn) * anni;                 // esborso spese IVA inclusa
+  const esAcq  = vAcq + ivaAcqTot;
+  const esNol  = (vNol + ivaNolMens)  * 12 * anni;
+  const esLeas = (vLeas + ivaLeasMens)* 12 * anni;
+  const esSp   = (vSpese + ivaSpeseAnn) * anni;
 
-  const cAcq  = esAcq  + esSp - ivaAcqDet                    - (dAcqA + dSpA) * anni * ir;
-  const cNol  = esNol  + esSp - (ivaNolDetA + ivaSpDetA)*anni - (dNolA + dSpA) * anni * ir;
-  const cLeas = esLeas + esSp - (ivaLeasDetA+ivaSpDetA)*anni  - (dLeasA+ dSpA) * anni * ir;
+  const cAcq  = esAcq  + esSp - ivaAcqDet                      - (dAcqA + dSpA) * anni * ir;
+  const cNol  = esNol  + esSp - (ivaNolDetA  + ivaSpDetA)*anni  - (dNolA + dSpA) * anni * ir;
+  const cLeas = esLeas + esSp - (ivaLeasDetA + ivaSpDetA)*anni  - (dLeasA+ dSpA) * anni * ir;
   const best  = Math.min(cAcq, cNol, cLeas);
 
   // ── SCHEDE ────────────────────────────────────────────────────────────────
@@ -335,31 +362,31 @@ Stima: <b>≈ ${fmt(fringe)} €/anno</b>. Per la società è <b>interamente ded
     {
       t: 'Acquisto', col: '#3b82f6',
       rows: [
-        ['Costo veicolo (IVA es.)',          fmt2(vAcq)+' €'],
-        ['IVA indetraibile capitalizzata',   fmt2(ivaAcqIndet)+' € ('+pct(ivaIndet*100)+' di '+fmt2(ivaAcqTot)+' €)', true],
-        ['Costo fiscalm. rilevante',         fmt2(costoFiscAcq)+' €'+(cappedAcq?' ⚠':''), cappedAcq],
-        ['Costo cap art. 164',               fmt2(costoRilAcq)+' €'],
-        ['Ammortamento',                     '25% / anno (4 anni)'],
-        ['Deducibilità',                     pct(dPct*100)],
-        ['Quota ded. veicolo/anno',          fmt2(dAcqA)+' €'],
-        ['IVA detraibile (una tantum)',       fmt2(ivaAcqDet)+' €'],
-        ['Spese utilizzo ded./anno',         fmt2(dSpA)+' € (incl. IVA indet.)'],
+        ['Costo veicolo (IVA es.)',         fmt2(vAcq)+' €'],
+        ['IVA indetraibile capitalizzata',  fmt2(ivaAcqIndet)+' €'],
+        ['Costo fiscalm. rilevante',        fmt2(costoFiscAcq)+' €'+(cappedAcq?' ⚠':''), cappedAcq],
+        ['Costo cap art. 164',              fmt2(costoRilAcq)+' €'],
+        ['Ammortamento',                    '25% / anno (4 anni)'],
+        ['Deducibilità',                    pct(dPct*100)],
+        ['Quota ded. veicolo/anno',         fmt2(dAcqA)+' €'],
+        ['IVA detraibile (una tantum)',      fmt2(ivaAcqDet)+' €'],
+        ['Spese utilizzo ded./anno',        fmt2(dSpA)+' €'],
       ],
-      capNote: cappedAcq ? `Costo fiscale (${fmt2(costoFiscAcq)} €) eccede il limite di ${fmt2(LIMITE_ACQ)} € — la quota in eccesso è indeducibile.` : null,
+      capNote: cappedAcq ? `Costo fiscale (${fmt2(costoFiscAcq)} €) eccede il limite di ${fmt2(LIMITE_ACQ)} € — quota in eccesso indeducibile.` : null,
       tot: dAcqA+dSpA, netto: cAcq, best: cAcq===best
     },
     {
       t: 'Noleggio a lungo termine (NLT)', col: '#10b981',
       rows: [
-        ['Canone mensile (IVA es.)',         fmt2(vNol)+' €'],
-        ['IVA indetraibile capitalizzata',   fmt2(ivaNolIndetM)+' €/mese', true],
-        ['Canone fiscale rilevante/mese',    fmt2(canoneFiscNolM)+' €'+(cappedNol?' ⚠':''), cappedNol],
-        ['Canone fiscale annuo',             fmt2(canoneFiscNolA)+' €'],
-        ['Canone annuo cap art. 164',        fmt2(canoneRilNolA)+' €'],
-        ['Deducibilità',                     pct(dPct*100)],
-        ['Quota ded. canoni/anno',           fmt2(dNolA)+' €'],
-        ['IVA detraibile/anno',              fmt2(ivaNolDetA)+' €'],
-        ['Spese utilizzo ded./anno',         fmt2(dSpA)+' € (incl. IVA indet.)'],
+        ['Canone mensile (IVA es.)',        fmt2(vNol)+' €'],
+        ['IVA indetraibile capitalizzata',  fmt2(ivaNolIndetM)+' €/mese'],
+        ['Canone fiscale rilevante/mese',   fmt2(canoneFiscNolM)+' €'+(cappedNol?' ⚠':''), cappedNol],
+        ['Canone fiscale annuo',            fmt2(canoneFiscNolA)+' €'],
+        ['Canone annuo cap art. 164',       fmt2(canoneRilNolA)+' €'],
+        ['Deducibilità',                    pct(dPct*100)],
+        ['Quota ded. canoni/anno',          fmt2(dNolA)+' €'],
+        ['IVA detraibile/anno',             fmt2(ivaNolDetA)+' €'],
+        ['Spese utilizzo ded./anno',        fmt2(dSpA)+' €'],
       ],
       capNote: cappedNol ? `Canone fiscale annuo (${fmt2(canoneFiscNolA)} €) eccede il limite di ${fmt2(LIMITE_NOL_ANNO)} €/anno.` : null,
       tot: dNolA+dSpA, netto: cNol, best: cNol===best
@@ -367,17 +394,17 @@ Stima: <b>≈ ${fmt(fringe)} €/anno</b>. Per la società è <b>interamente ded
     {
       t: 'Leasing finanziario', col: '#ef4444',
       rows: [
-        ['Canone mensile (IVA es.)',         fmt2(vLeas)+' €'],
-        ['IVA indetraibile capitalizzata',   fmt2(ivaLeasIndetM)+' €/mese', true],
-        ['Canone fiscale rilevante/mese',    fmt2(canoneFiscLeasM)+' €'],
-        ['Canone fiscale annuo',             fmt2(canoneFiscLeasA)+' €'],
+        ['Canone mensile (IVA es.)',        fmt2(vLeas)+' €'],
+        ['IVA indetraibile capitalizzata',  fmt2(ivaLeasIndetM)+' €/mese'],
+        ['Canone fiscale rilevante/mese',   fmt2(canoneFiscLeasM)+' €'],
+        ['Canone fiscale annuo',            fmt2(canoneFiscLeasA)+' €'],
         limiti
-          ? ['Rapporto limite/costo',        pct(leasRacc*100)+' → canone rid. '+fmt2(canoneRilLeasA)+' €'+(cappedLeas?' ⚠':''), cappedLeas]
-          : ['Canone annuo rilevante',       fmt2(canoneRilLeasA)+' €'],
-        ['Deducibilità canoni (CO₂)',        co2info.label],
-        ['Quota ded. canoni/anno',           fmt2(dLeasA)+' €'],
-        ['IVA detraibile/anno',              fmt2(ivaLeasDetA)+' €'],
-        ['Spese utilizzo ded./anno',         fmt2(dSpA)+' € (incl. IVA indet.)'],
+          ? ['Rapporto limite/costo',       pct(leasRacc*100)+' → ridotto a '+fmt2(canoneRilLeasA)+' €'+(cappedLeas?' ⚠':''), cappedLeas]
+          : ['Canone annuo rilevante',      fmt2(canoneRilLeasA)+' €'],
+        ['Deducibilità canoni (CO₂)',       co2info.label],
+        ['Quota ded. canoni/anno',          fmt2(dLeasA)+' €'],
+        ['IVA detraibile/anno',             fmt2(ivaLeasDetA)+' €'],
+        ['Spese utilizzo ded./anno',        fmt2(dSpA)+' €'],
       ],
       capNote: cappedLeas ? `Costo fiscale (${fmt2(costoFiscAcq)} €) eccede ${fmt2(LIMITE_ACQ)} €: il canone è ridotto al ${pct(leasRacc*100)} prima di applicare la % CO₂.` : null,
       tot: dLeasA+dSpA, netto: cLeas, best: cLeas===best
@@ -388,10 +415,10 @@ Stima: <b>≈ ${fmt(fringe)} €/anno</b>. Per la società è <b>interamente ded
     <div class="card${c.best?' best':''}">
       ${c.best?'<span class="badge">Minore costo netto</span>':''}
       <div class="ct" style="color:${c.col}">${c.t}</div>
-      ${c.rows.map(r=>`<div class="cr"><span class="l">${r[0]}</span><span class="v${r[2]?' cap':r[1]&&r[1].toString().includes('indet')||r[1]&&r[1].toString().includes('capitaliz')?' sub':''}">${r[1]}</span></div>`).join('')}
+      ${c.rows.map(r=>`<div class="cr"><span class="l">${r[0]}</span><span class="v${r[2]?' cap':''}">${r[1]}</span></div>`).join('')}
       ${c.capNote?`<div class="capnote">⚠ ${c.capNote}</div>`:''}
       <div class="ctot"><span>Deducibile/anno</span><span style="color:#10b981">${fmt(c.tot)} €</span></div>
-      <div class="cnote">Costo netto stimato ${anni} anni (esborso IVA inclusa, meno IVA detr. e risparmio IRES 24%): <b>${fmt(c.netto)} €</b></div>
+      <div class="cnote">Costo netto ${anni} anni (esborso IVA incl. meno IVA detr. e risparmio IRES 24%): <b>${fmt(c.netto)} €</b></div>
     </div>`).join('');
 
   document.getElementById('ristG').innerHTML = [
@@ -406,7 +433,9 @@ Stima: <b>≈ ${fmt(fringe)} €/anno</b>. Per la società è <b>interamente ded
 ['vAcq','vNol','vLeas','vSpese','vAnni','vCo2'].forEach(id =>
   document.getElementById(id).addEventListener('input', calcola)
 );
+document.getElementById('alimentazione').addEventListener('change', calcola);
 calcola();
 </script>
 </body>
 </html>
+
